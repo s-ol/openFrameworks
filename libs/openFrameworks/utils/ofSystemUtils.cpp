@@ -38,31 +38,33 @@ using namespace std;
 #include <string>
 
 std::string convertWideToNarrow( const wchar_t *s, char dfault = '?',
-                      const std::locale& loc = std::locale() )
+		const std::locale& loc = std::locale() )
 {
-  std::ostringstream stm;
+	std::ostringstream stm;
 
-  while( *s != L'\0' ) {
-    stm << std::use_facet< std::ctype<wchar_t> >( loc ).narrow( *s++, dfault );
-  }
-  return stm.str();
+	while( *s != L'\0' ){
+		stm << std::use_facet< std::ctype<wchar_t> >( loc ).narrow( *s++, dfault );
+	}
+	return stm.str();
 }
 
 std::wstring convertNarrowToWide( const std::string& as ){
-    // deal with trivial case of empty string
-    if( as.empty() )    return std::wstring();
+	// deal with trivial case of empty string
+	if( as.empty() ) {
+		return std::wstring();
+	}
 
-    // determine required length of new string
-    size_t reqLength = ::MultiByteToWideChar( CP_UTF8, 0, as.c_str(), (int)as.length(), 0, 0 );
+	// determine required length of new string
+	size_t reqLength = ::MultiByteToWideChar( CP_UTF8, 0, as.c_str(), (int)as.length(), 0, 0 );
 
-    // construct new string of required length
-    std::wstring ret( reqLength, L'\0' );
+	// construct new string of required length
+	std::wstring ret( reqLength, L'\0' );
 
-    // convert old string to new string
-    ::MultiByteToWideChar( CP_UTF8, 0, as.c_str(), (int)as.length(), &ret[0], (int)ret.length() );
+	// convert old string to new string
+	::MultiByteToWideChar( CP_UTF8, 0, as.c_str(), (int)as.length(), &ret[0], (int)ret.length() );
 
-    // return new string ( compiler should optimize this away )
-    return ret;
+	// return new string ( compiler should optimize this away )
+	return ret;
 }
 
 #endif
@@ -70,7 +72,7 @@ std::wstring convertNarrowToWide( const std::string& as ){
 #if defined( TARGET_OSX )
 static void restoreAppWindowFocus(){
 	NSWindow * appWindow = (NSWindow *)ofGetCocoaWindow();
-	if(appWindow) {
+	if(appWindow){
 		[appWindow makeKeyAndOrderFront:nil];
 	}
 }
@@ -144,7 +146,7 @@ gboolean file_dialog_gtk(gpointer userdata){
 			gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), dialogData->defaultName.c_str());
 		}
 
-		if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+		if(gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT){
 			dialogData->results = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 		}
 		gtk_widget_destroy (dialog);
@@ -347,17 +349,17 @@ void ofSystemAlertDialog(string errorMessage){
 #ifdef TARGET_WIN32
 //---------------------------------------------------------------------
 static int CALLBACK loadDialogBrowseCallback(
-  HWND hwnd,
-  UINT uMsg,
-  LPARAM lParam,
-  LPARAM lpData
+	HWND hwnd,
+	UINT uMsg,
+	LPARAM lParam,
+	LPARAM lpData
 ){
-    string defaultPath = *(string*)lpData;
-    if(defaultPath!="" && uMsg==BFFM_INITIALIZED){
-		wchar_t         wideCharacterBuffer[MAX_PATH];
+	string defaultPath = *(string*)lpData;
+	if(defaultPath!="" && uMsg==BFFM_INITIALIZED){
+		wchar_t wideCharacterBuffer[MAX_PATH];
 		wcscpy(wideCharacterBuffer, convertNarrowToWide(ofToDataPath(defaultPath)).c_str());
-        SendMessage(hwnd,BFFM_SETSELECTION,1,(LPARAM)wideCharacterBuffer);
-    }
+		SendMessage(hwnd,BFFM_SETSELECTION,1,(LPARAM)wideCharacterBuffer);
+	}
 
 	return 0;
 }
@@ -383,11 +385,11 @@ ofFileDialogResult ofSystemLoadDialog(string windowTitle, bool bFolderSelection,
 		[loadDialog setCanChooseFiles:!bFolderSelection];
 		[loadDialog setResolvesAliases:YES];
 
-		if(!windowTitle.empty()) {
+		if(!windowTitle.empty()){
 			[loadDialog setTitle:[NSString stringWithUTF8String:windowTitle.c_str()]];
 		}
 
-		if(!defaultPath.empty()) {
+		if(!defaultPath.empty()){
 			NSString * s = [NSString stringWithUTF8String:defaultPath.c_str()];
 			s = [[s stringByExpandingTildeInPath] stringByResolvingSymlinksInPath];
 			NSURL * defaultPathUrl = [NSURL fileURLWithPath:s];
@@ -398,7 +400,7 @@ ofFileDialogResult ofSystemLoadDialog(string windowTitle, bool bFolderSelection,
 		[context makeCurrentContext];
 		restoreAppWindowFocus();
 
-		if(buttonClicked == NSFileHandlingPanelOKButton) {
+		if(buttonClicked == NSFileHandlingPanelOKButton){
 			NSURL * selectedFileURL = [[loadDialog URLs] objectAtIndex:0];
 			results.filePath = string([[selectedFileURL path] UTF8String]);
 		}
@@ -415,9 +417,9 @@ ofFileDialogResult ofSystemLoadDialog(string windowTitle, bool bFolderSelection,
 	wstring windowTitleW;
 	windowTitleW.assign(windowTitle.begin(), windowTitle.end());
 
-	if (bFolderSelection == false){
+	if(bFolderSelection == false){
 
-        OPENFILENAME ofn;
+		OPENFILENAME ofn;
 
 		ZeroMemory(&ofn, sizeof(ofn));
 		ofn.lStructSize = sizeof(ofn);
@@ -438,7 +440,7 @@ ofFileDialogResult ofSystemLoadDialog(string windowTitle, bool bFolderSelection,
 			ofn.lpstrInitialDir = szDir;
 		}
 
-		if (windowTitle != "") {
+		if(windowTitle != ""){
 			wcscpy(szTitle, convertNarrowToWide(windowTitle).c_str());
 			ofn.lpstrTitle = szTitle;
 		} else {
@@ -452,7 +454,7 @@ ofFileDialogResult ofSystemLoadDialog(string windowTitle, bool bFolderSelection,
 		ofn.lpstrDefExt = 0;
 		ofn.lpstrTitle = windowTitleW.c_str();
 
-		if(GetOpenFileName(&ofn)) {
+		if(GetOpenFileName(&ofn)){
 			results.filePath = convertWideToNarrow(szFileName);
 		}
 		else {
@@ -468,7 +470,7 @@ ofFileDialogResult ofSystemLoadDialog(string windowTitle, bool bFolderSelection,
 		LPITEMIDLIST    pidl;
 		LPMALLOC		lpMalloc;
 
-		if (windowTitle != "") {
+		if(windowTitle != ""){
 			wcscpy(wideWindowTitle, convertNarrowToWide(windowTitle).c_str());
 		} else {
 			wcscpy(wideWindowTitle, L"Select Directory");
@@ -565,7 +567,7 @@ ofFileDialogResult ofSystemSaveDialog(string defaultName, string messageName){
 
 	wchar_t fileName[MAX_PATH] = L"";
 	OPENFILENAMEW ofn;
-    memset(&ofn, 0, sizeof(OPENFILENAME));
+	memset(&ofn, 0, sizeof(OPENFILENAME));
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	HWND hwnd = WindowFromDC(wglGetCurrentDC());
 	ofn.hwndOwner = hwnd;
@@ -578,7 +580,7 @@ ofFileDialogResult ofSystemSaveDialog(string defaultName, string messageName){
 	ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 	ofn.lpstrTitle = L"Select Output File";
 
-	if (GetSaveFileNameW(&ofn)){
+	if(GetSaveFileNameW(&ofn)){
 		results.filePath = convertWideToNarrow(fileName);
 	}
 
@@ -611,17 +613,17 @@ ofFileDialogResult ofSystemSaveDialog(string defaultName, string messageName){
 #ifdef TARGET_WIN32
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    //switch(msg)
-    //{
-    //    case WM_CLOSE:
-    //        DestroyWindow(hwnd);
-    //    break;
-    //    case WM_DESTROY:
-    //        PostQuitMessage(0);
-    //    break;
-    //    default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-    //}
+	//switch(msg)
+	//{
+	//    case WM_CLOSE:
+	//        DestroyWindow(hwnd);
+	//    break;
+	//    case WM_DESTROY:
+	//        PostQuitMessage(0);
+	//    break;
+	//    default:
+	return DefWindowProc(hwnd, msg, wParam, lParam);
+	//}
 }
 #endif
 
@@ -645,10 +647,10 @@ bool ofSystemConfirmDialog(string message, bool bYesNo){
 #ifdef TARGET_OSX
 	@autoreleasepool {
 		NSAlert *alert = [[[NSAlert alloc] init] autorelease];
-		if (bYesNo) {
+		if(bYesNo){
 			[alert addButtonWithTitle:@"Yes"];
 			[alert addButtonWithTitle:@"No"];
-		} else {
+		}else{
 			[alert addButtonWithTitle:@"OK"];
 			[alert addButtonWithTitle:@"Cancel"];
 		}
@@ -709,19 +711,20 @@ string ofSystemTextBoxDialog(string question, string text){
 		NSInteger returnCode = [alert runModal];
 		restoreAppWindowFocus();
 		// if OK was clicked, assign value to text
-		if ( returnCode == NSAlertFirstButtonReturn )
+		if(returnCode == NSAlertFirstButtonReturn){
 			text = [[label stringValue] UTF8String];
+		}
 	}
 #endif
 
 #ifdef TARGET_WIN32
-    // we need to convert error message to a wide char message.
-    // first, figure out the length and allocate a wchar_t at that length + 1 (the +1 is for a terminating character)
+	// we need to convert error message to a wide char message.
+	// first, figure out the length and allocate a wchar_t at that length + 1 (the +1 is for a terminating character)
 
-	WNDCLASSEX wc;
-	MSG Msg;
+		WNDCLASSEX wc;
+		MSG Msg;
 
-        #define TMP_STR_CONVERT LPCWSTR
+		#define TMP_STR_CONVERT LPCWSTR
 
 		const LPCWSTR g_szClassName = L"myWindowClass\0";
 
@@ -740,14 +743,14 @@ string ofSystemTextBoxDialog(string question, string text){
 		wc.hIconSm       = LoadIcon(nullptr, IDI_APPLICATION);
 		if(!RegisterClassEx(&wc)){
 			DWORD err=GetLastError();
-			if ((err==ERROR_CLASS_ALREADY_EXISTS)){
-                ; // we are ok
-                // http://stackoverflow.com/questions/5791996/re-registering-user-defined-window-class-c
-            } else {
-			MessageBox(nullptr, L"Window Registration Failed!\0", L"Error!\0",
-				MB_ICONEXCLAMATION | MB_OK);
-			return text;
-		}
+			if((err==ERROR_CLASS_ALREADY_EXISTS)){
+				; // we are ok
+				// http://stackoverflow.com/questions/5791996/re-registering-user-defined-window-class-c
+			} else {
+				MessageBox(nullptr, L"Window Registration Failed!\0", L"Error!\0",
+					MB_ICONEXCLAMATION | MB_OK);
+				return text;
+			}
 		}
 
 		HWND dialog = CreateWindowEx(WS_EX_DLGMODALFRAME,
@@ -757,13 +760,10 @@ string ofSystemTextBoxDialog(string question, string text){
 			CW_USEDEFAULT, CW_USEDEFAULT, 240, 140,
 			WindowFromDC(wglGetCurrentDC()), nullptr, GetModuleHandle(0),nullptr);
 
-		if(dialog == nullptr)
-		{
-
+		if(dialog == nullptr){
 			MessageBox(nullptr,L"Window Creation Failed!\0", L"Error!\0",
 				MB_ICONEXCLAMATION | MB_OK);
 			return text;
-
 		}
 
 		EnableWindow(WindowFromDC(wglGetCurrentDC()), FALSE);
@@ -785,70 +785,70 @@ string ofSystemTextBoxDialog(string question, string text){
 		ShowWindow(dialog, SW_SHOWNORMAL);
 		bool bFirstEmpty = true;
 		while (true){
-			 if (!PeekMessageW( &Msg, 0, 0, 0, PM_REMOVE )){
-				 if (bFirstEmpty){
-					 // ShowWindow the first time the queue goes empty
-					 ShowWindow( dialog, SW_SHOWNORMAL );
-					 bFirstEmpty = FALSE;
-				 }
-				 if (!(GetWindowLongW( dialog, GWL_STYLE ) & DS_NOIDLEMSG)){
-					 // No message present -> send ENTERIDLE and wait
-					 SendMessageW( WindowFromDC(wglGetCurrentDC()), WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)dialog );
-				 }
-				 GetMessageW( &Msg, 0, 0, 0 );
-			 }
+			if(!PeekMessageW( &Msg, 0, 0, 0, PM_REMOVE )){
+				if(bFirstEmpty){
+					// ShowWindow the first time the queue goes empty
+					ShowWindow( dialog, SW_SHOWNORMAL );
+					bFirstEmpty = FALSE;
+				}
+				if(!(GetWindowLongW( dialog, GWL_STYLE ) & DS_NOIDLEMSG)){
+					// No message present -> send ENTERIDLE and wait
+					SendMessageW( WindowFromDC(wglGetCurrentDC()), WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)dialog );
+				}
+				GetMessageW( &Msg, 0, 0, 0 );
+			}
 
-			 if (Msg.message == WM_QUIT){
-				 PostQuitMessage( Msg.wParam );
-				 if (!IsWindow( dialog )){
+			if(Msg.message == WM_QUIT){
+				PostQuitMessage( Msg.wParam );
+				if(!IsWindow( dialog )){
 					EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
 					return text;
-				 }
-				 break;
-			 }
+				}
+				break;
+			}
 
-			 if (!IsWindow( dialog )){
+			if(!IsWindow( dialog )){
 				EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
 				return text;
-			 }
+			}
 
-			 TranslateMessage( &Msg );
-			 DispatchMessageW( &Msg );
+			TranslateMessage( &Msg );
+			DispatchMessageW( &Msg );
 
-			 if((Msg.hwnd == okButton && Msg.message==WM_LBUTTONUP) || (Msg.message==WM_KEYUP && Msg.wParam==13)){
-				 break;
-			 }else if((Msg.hwnd == cancelButton && Msg.message==WM_LBUTTONUP) ||  (Msg.message==WM_KEYUP && Msg.wParam==27)){
-				 EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
-				 DestroyWindow(dialog);
-				 return text;
-			 }
+			if((Msg.hwnd == okButton && Msg.message==WM_LBUTTONUP) || (Msg.message==WM_KEYUP && Msg.wParam==13)){
+				break;
+			}else if((Msg.hwnd == cancelButton && Msg.message==WM_LBUTTONUP) ||  (Msg.message==WM_KEYUP && Msg.wParam==27)){
+				EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
+				DestroyWindow(dialog);
+				return text;
+			}
 
-			 if (!IsWindow( dialog )){
+			if(!IsWindow( dialog )){
 				EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
 				return text;
-			 }
+			}
 
-			 if (bFirstEmpty && Msg.message == WM_TIMER){
-				 ShowWindow( dialog, SW_SHOWNORMAL );
-				 bFirstEmpty = FALSE;
-			 }
-		 }
+			if(bFirstEmpty && Msg.message == WM_TIMER){
+				ShowWindow( dialog, SW_SHOWNORMAL );
+				bFirstEmpty = FALSE;
+			}
+		}
 
-		 char buf[16384];
-		 GetDlgItemTextA( dialog, 101, buf, 16384 );
-		 text = buf;
+		char buf[16384];
+		GetDlgItemTextA( dialog, 101, buf, 16384 );
+		text = buf;
 
-		 DestroyWindow(dialog);
-		 EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
+		DestroyWindow(dialog);
+		EnableWindow(WindowFromDC(wglGetCurrentDC()), TRUE);
 
 #endif
 
 #ifdef TARGET_ANDROID
-     ofxAndroidAlertTextBox(question,text);
+		ofxAndroidAlertTextBox(question,text);
 #endif
 
 #ifdef TARGET_EMSCRIPTEN
-     text = emscripten_run_script_string((string("prompt('") + question + "','')").c_str());
+		text = emscripten_run_script_string((string("prompt('") + question + "','')").c_str());
 #endif
 	return text;
 }
